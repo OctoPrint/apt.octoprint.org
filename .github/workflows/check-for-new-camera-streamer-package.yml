@@ -70,7 +70,7 @@ jobs:
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "Package not in repo"
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
       
       - name: Trigger package addition if not yet there
