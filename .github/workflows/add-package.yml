@@ -3,6 +3,17 @@ name: "Add package to repository"
 on:
   repository_dispatch:
     types: [add-package]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL of the package to add"
+        required: true
+      dist:
+        description: "Distribution to add the package to"
+        required: true
+      component:
+        description: "Component to add the package to"
+        required: true
 
 jobs:
   add-package:
@@ -18,9 +29,15 @@ jobs:
       - name: Fetch package
         id: fetch
         run: |
-          URL="${{ github.event.client_payload.url }}"
-          DIST="${{ github.event.client_payload.dist }}"
-          COMPONENT="${{ github.event.client_payload.component }}"
+          if [[ "${{ github.event_name }}" = "repository_dispatch" && "${{ github.event.action }}" = "add-package" ]]; then
+            URL="${{ github.event.client_payload.url }}"
+            DIST="${{ github.event.client_payload.dist }}"
+            COMPONENT="${{ github.event.client_payload.component }}"
+          else
+            URL="${{ github.event.inputs.url }}"
+            DIST="${{ github.event.inputs.dist }}"
+            COMPONENT="${{ github.event.inputs.component }}"
+          fi
 
           echo "URL: $URL"
           echo "DIST: $DIST"

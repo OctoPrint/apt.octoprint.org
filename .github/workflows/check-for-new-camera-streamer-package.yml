@@ -1,0 +1,81 @@
+name: "Check for new camera-streamer-raspi package"
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-package:
+    name: "Check packages"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "🔎 Find latest package"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let release = null;
+  
+            console.log("Fetching latest release");
+  
+            const query = `query {
+              repository(owner:"OctoPrint", name:"camera-streamer") {
+                latestRelease {
+                  tagName
+                  releaseAssets(last:10) {
+                    nodes {
+                      name
+                      downloadUrl
+                    }
+                  }
+                }
+              }
+            }`;
+  
+            const result = await github.graphql(query);
+            console.log({result});
+  
+            release = result.repository.latestRelease;
+  
+            if (!release || !release.tagName || !release.releaseAssets || !release.releaseAssets.nodes) core.setFailed("Could not find OctoPi release");
+  
+            const tag = release.tagName;
+
+            let packageName = null;
+            let packageUrl = null;
+            for (const asset of release.releaseAssets.nodes.reverse()) {
+                if (asset.name.startsWith("camera-streamer-raspi_") && asset.name.endsWith("_armhf.deb")) {
+                    packageName = asset.name;
+                    packageUrl = asset.downloadUrl;
+                    break;
+                }
+            }
+            if (!packageName || !packageUrl) core.setFailed("Could not find camera-streamer-raspi armhf package");
+
+            console.log(`Package name: ${packageName}`)
+            console.log(`Package URL: ${packageUrl}`);
+
+            core.exportVariable("PACKAGE_NAME", packageName);
+            core.exportVariable("PACKAGE_URL", packageUrl);
+
+      - name: ⬇ Checkout
+        uses: actions/checkout@v3
+      
+      - name: 🤔 Check if package is already in repo
+        id: check-package-exists
+        run: |
+          if [ -f "pool/bullseye/rpi/camera-streamer-raspi/${{ env.PACKAGE_NAME }}" ]; then
+            echo "Package already in repo"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Package not in repo"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Trigger package addition if not yet there
+        if: steps.check-package-exists.outputs.exists != 'true'
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: add-package.yaml
+          inputs: '{"url": "${{ env.PACKAGE_URL}}", "dist": "bullseye", "component": "rpi"}'
