@@ -77,5 +77,5 @@ jobs:
         if: steps.check-package-exists.outputs.exists != 'true'
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: add-package.yaml
+          workflow: add-package.yml
           inputs: '{"url": "${{ env.PACKAGE_URL}}", "dist": "bullseye", "component": "rpi"}'
