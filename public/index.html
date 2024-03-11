@@ -11,12 +11,25 @@
     <p>Signing key: <a href="./octoprint.gpg.key">apt.octoprint.org/octoprint.gpg.key</a></p>
     <p>GitHub: <a href="https://github.com/OctoPrint/apt.octoprint.org" target="_blank">github.com/OctoPrint/apt.octoprint.org</a></p>
 
-    <h2>RaspberryPi OS/OctoPi</h2>
+    <h2>Usage</h2>
+    
+    <h3>RaspberryPi OS/OctoPi</h3>
 
     <code>
-        curl -s --compressed "https://apt.octoprint.org/octoprint.gpg.key" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/octoprint.gpg > /dev/null<br>
-        sudo curl -s --compressed -o /etc/apt/sources.list.d/octoprint.list "https://apt.octoprint.org/octoprint-bullseye-rpi.list"<br>
+        curl -s --compressed "https://foosel.github.io/apt.octoprint.org/octoprint.gpg.key" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/octoprint.gpg > /dev/null<br>
+        sudo curl -s --compressed -o /etc/apt/sources.list.d/octoprint.list "https://foosel.github.io/apt.octoprint.org/octoprint-bullseye-rpi.list"<br>
         sudo apt update<br>
     </code>
+
+    <h2>FAQ</h2>
+    
+    <h3>"I get an error on update: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 418208F07AD011A2"</h3>
+
+    Please re-import the public key, it has been updated:
+
+    <p><code>
+        curl -s --compressed "https://apt.octoprint.org/octoprint.gpg.key" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/octoprint.gpg > /dev/null<br>
+        sudo apt update
+    </code></p>
   </body>
 </html>
