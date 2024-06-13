@@ -42,22 +42,40 @@ jobs:
   
             const tag = release.tagName;
 
-            let packageName = null;
-            let packageUrl = null;
+            let packageNames = [];
+            let packageUrls = [];
+            let found_armhf = false;
+            let found_arm64 = false;
             for (const asset of release.releaseAssets.nodes.reverse()) {
                 if (asset.name.startsWith("camera-streamer-raspi_") && asset.name.endsWith("_armhf.deb")) {
-                    packageName = asset.name;
-                    packageUrl = asset.downloadUrl;
+                    packageNames.push(asset.name);
+                    packageUrls.push(asset.downloadUrl);
+                    found_armhf = true;
+                }
+                if (asset.name.startsWith("camera-streamer-raspi_") && asset.name.endsWith("_arm64.deb")) {
+                    packageNames.push(asset.name);
+                    packageUrls.push(asset.downloadUrl);
+                    found_arm64 = true;
+                }
+                if (found_armhf && found_arm64) {
                     break;
                 }
             }
-            if (!packageName || !packageUrl) core.setFailed("Could not find camera-streamer-raspi armhf package");
 
-            console.log(`Package name: ${packageName}`)
-            console.log(`Package URL: ${packageUrl}`);
+            if (!found_armhf) core.setFailed("Could not find camera-streamer-raspi armhf package");
+            if (!found_arm64) core.setFailed("Could not find camera-streamer-raspi arm64 package");
 
-            core.exportVariable("PACKAGE_NAME", packageName);
-            core.exportVariable("PACKAGE_URL", packageUrl);
+            console.log("Package names:");
+            for (const name of packageNames) {
+                console.log(`  ${name}`)
+            }
+            console.log("Package URLs:");
+            for (const url of packageUrls) {
+                console.log(`  ${url}`)
+            }
+
+            core.exportVariable("PACKAGE_NAMES", packageNames.join(" "));
+            core.exportVariable("PACKAGE_URLS", packageUrls.join(" "));
 
       - name: ⬇ Checkout
         uses: actions/checkout@v3
@@ -65,17 +83,22 @@ jobs:
       - name: 🤔 Check if package is already in repo
         id: check-package-exists
         run: |
-          if [ -f "pool/bullseye/rpi/camera-streamer-raspi/${{ env.PACKAGE_NAME }}" ]; then
-            echo "Package already in repo"
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Package not in repo"
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-      
+          NAMES=($PACKAGE_NAMES)
+          URLS=($PACKAGE_URLS)
+          NEWURLS=()
+          for i in "${!NAMES[@]}"; do
+            if [ -f "pool/bullseye/rpi/camera-streamer-raspi/${NAMES[i]}" ]; then
+              echo "Package ${NAMES[i]} already in repo"
+            else
+              echo "Package ${NAMES[i]} not in repo"
+              NEWURLS+=(${URLS[i]})
+            fi
+          done
+          echo "geturls=${NEWURLS[*]}" >> "$GITHUB_OUTPUT"
+
       - name: Trigger package addition if not yet there
-        if: steps.check-package-exists.outputs.exists != 'true'
+        if: steps.check-package-exists.outputs.geturls != ''
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: add-package.yml
-          inputs: '{"url": "${{ env.PACKAGE_URL}}", "dist": "bullseye", "component": "rpi"}'
+          inputs: '{"urls": "${{ steps.check-package-exists.outputs.geturls }}", "dist": "bullseye", "component": "rpi"}'
