@@ -52,7 +52,7 @@ jobs:
         env:
           DISTS: bullseye
           COMPONENTS: rpi
-          ARCHS: binary-armhf
+          ARCHS: binary-armhf binary-arm64
         run: |
           repo="public/debian/dists"
 
