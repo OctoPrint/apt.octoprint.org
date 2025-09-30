@@ -85,7 +85,7 @@ jobs:
           NEWURLS=()
           for i in "${!NAMES[@]}"; do
             name=${NAMES[i]}
-            dist=$(echo $name | rev | cut -d"." -f2 | rev | cut -d"_" -f1)
+            dist=$(echo $name | rev | cut -d"." -f2 | rev | cut -d"_" -f1 | cut -d"-" -f1)
             if [ -f "pool/$dist/rpi/camera-streamer-raspi/${NAMES[i]}" ]; then
               echo "Package ${NAMES[i]} already in repo"
             else
