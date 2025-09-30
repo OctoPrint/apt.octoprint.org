@@ -11,7 +11,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  
+
 jobs:
   build:
     name: "Build"
@@ -20,13 +20,13 @@ jobs:
     steps:
       - name: ⬇ Checkout
         uses: actions/checkout@v3
-      
+
       - name: 🔑 Configure GPG key
         run: |
           echo -n "$GPG_SIGNING_KEY" | gpg --import
         env:
           GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
-      
+
       - name: 🏗 Install apt-utils
         run: |
           sudo apt-get -y install apt-utils
@@ -50,9 +50,9 @@ jobs:
 
       - name: ✍ Generate repository files
         env:
-          DISTS: bullseye
-          COMPONENTS: rpi
-          ARCHS: binary-armhf binary-arm64
+          DISTS: "bullseye bookworm"
+          COMPONENTS: "rpi"
+          ARCHS: "binary-armhf binary-arm64"
         run: |
           repo="public/debian/dists"
 
@@ -67,7 +67,7 @@ jobs:
 
           # generate repo
           apt-ftparchive generate apt-ftparchive.conf
-          
+
           # generate signed & unsigned Release files
           for dist in $DISTS; do
             apt-ftparchive -c $dist.conf release $repo/$dist > $repo/$dist/Release
@@ -88,7 +88,7 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           path: ./public
-  
+
   deploy:
     name: "Deploy"
     runs-on: ubuntu-latest

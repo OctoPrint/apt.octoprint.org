@@ -17,7 +17,7 @@
 
     <code>
         curl -s --compressed "https://apt.octoprint.org/octoprint.gpg.key" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/octoprint.gpg > /dev/null<br>
-        sudo curl -s --compressed -o /etc/apt/sources.list.d/octoprint.list "https://apt.octoprint.org/octoprint-bullseye-rpi.list"<br>
+        sudo echo "deb https://apt.octoprint.org/debian $(lsb_release -cs) rpi" > /etc/apt/sources.list.d/octoprint.list<br>
         sudo apt update<br>
     </code>
 
