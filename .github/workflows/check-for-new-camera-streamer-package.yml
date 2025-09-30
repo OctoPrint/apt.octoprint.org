@@ -16,9 +16,9 @@ jobs:
         with:
           script: |
             let release = null;
-  
+
             console.log("Fetching latest release");
-  
+
             const query = `query {
               repository(owner:"OctoPrint", name:"camera-streamer") {
                 latestRelease {
@@ -32,14 +32,14 @@ jobs:
                 }
               }
             }`;
-  
+
             const result = await github.graphql(query);
             console.log({result});
-  
+
             release = result.repository.latestRelease;
-  
-            if (!release || !release.tagName || !release.releaseAssets || !release.releaseAssets.nodes) core.setFailed("Could not find OctoPi release");
-  
+
+            if (!release || !release.tagName || !release.releaseAssets || !release.releaseAssets.nodes) core.setFailed("Could not find camera-streamer release");
+
             const tag = release.tagName;
 
             let packageNames = [];
@@ -56,9 +56,6 @@ jobs:
                     packageNames.push(asset.name);
                     packageUrls.push(asset.downloadUrl);
                     found_arm64 = true;
-                }
-                if (found_armhf && found_arm64) {
-                    break;
                 }
             }
 
@@ -79,7 +76,7 @@ jobs:
 
       - name: ⬇ Checkout
         uses: actions/checkout@v3
-      
+
       - name: 🤔 Check if package is already in repo
         id: check-package-exists
         run: |
@@ -87,7 +84,9 @@ jobs:
           URLS=($PACKAGE_URLS)
           NEWURLS=()
           for i in "${!NAMES[@]}"; do
-            if [ -f "pool/bullseye/rpi/camera-streamer-raspi/${NAMES[i]}" ]; then
+            name=${NAMES[i]}
+            dist=$(echo $name | rev | cut -d"." -f2 | rev | cut -d"_" -f1)
+            if [ -f "pool/$dist/rpi/camera-streamer-raspi/${NAMES[i]}" ]; then
               echo "Package ${NAMES[i]} already in repo"
             else
               echo "Package ${NAMES[i]} not in repo"
@@ -101,4 +100,4 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: add-package.yml
-          inputs: '{"urls": "${{ steps.check-package-exists.outputs.geturls }}", "dist": "bullseye", "component": "rpi"}'
+          inputs: '{"urls": "${{ steps.check-package-exists.outputs.geturls }}", "component": "rpi"}'
