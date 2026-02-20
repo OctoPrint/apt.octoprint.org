@@ -17,7 +17,7 @@
 
     <code>
         curl -s --compressed "https://apt.octoprint.org/octoprint.gpg.key" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/octoprint.gpg > /dev/null<br>
-        sudo echo "deb https://apt.octoprint.org/debian $(lsb_release -cs) rpi" > /etc/apt/sources.list.d/octoprint.list<br>
+        echo "deb https://apt.octoprint.org/debian $(lsb_release -cs) rpi" | sudo tee /etc/apt/sources.list.d/octoprint.list<br>
         sudo apt update<br>
     </code>
 
